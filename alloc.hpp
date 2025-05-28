@@ -259,3 +259,103 @@ inline void MyContainer::printall()
     std::cout << std::endl;
     
 }
+
+struct Node
+{
+    Node* next;
+    Node* prev;
+    int data;
+};
+class MyContainerZ
+{
+    public:
+        MyContainerZ(size_t n);
+        ~MyContainerZ();
+
+        //void push_back(int value);
+        void push_back2(int value);
+        void printall();
+        Node* get_next();
+    private:
+        size_t m_size;
+        size_t current;
+
+    Node* data;
+
+    Node *get_this(size_t i)
+    {
+        return &data[i];
+    }
+
+    void freememory(){
+        if (data){
+            Node* del_data;
+            del_data = data;
+            for(size_t i = m_size; i > 1; i--)
+            {
+                del_data = del_data->prev;
+            }
+            std::free(del_data->prev);
+        }
+        std::cout << "clear mem of list alloc con" << std::endl;
+    }
+
+};
+inline MyContainerZ::MyContainerZ(size_t n):m_size{n}, data{nullptr}, current{0}
+{
+    data = static_cast<Node*>(std::malloc(m_size * sizeof(Node)));
+}
+
+inline MyContainerZ::~MyContainerZ()
+{
+    freememory();
+}
+
+// inline void MyContainerZ::push_back(int value)
+// {
+//     Node* new_data = new Node{};
+//     new_data->prev = data;
+//     new_data->next = nullptr;
+//     new_data->data = value;
+//     if (current>0){
+//         data->next = new_data;
+//     }
+//     data = new_data;
+//     current++;
+    
+// }
+inline void MyContainerZ::push_back2(int value)
+{
+    Node* new_data = get_next();
+    new(new_data) Node{};
+    new_data->prev = data;
+    new_data->next = nullptr;
+    new_data->data = value;
+    if (current>0){
+        data->next = new_data;
+    }
+    data = new_data;
+    current++;
+}
+inline void MyContainerZ::printall()
+{
+    Node* print_data = data;
+    for (size_t i = m_size; i > 1; i--){
+        print_data = print_data->prev;
+    }
+    for (size_t j = 0; j < m_size; j++){
+        std::cout << print_data->data;
+        print_data = print_data->next;
+        if ((j) != m_size - 1){
+            std::cout << ",";
+        }
+    }
+    std::cout << std::endl;
+    
+}
+
+inline Node *MyContainerZ::get_next()
+{
+    if (current >= m_size) return nullptr;  // Проверка на переполнение
+    return &data[current+1];
+}
