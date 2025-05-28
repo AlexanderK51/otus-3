@@ -1,0 +1,1 @@
+/usr/bin/clang++ -g CMakeFiles/alloc.dir/main.cpp.o -o alloc 

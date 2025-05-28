@@ -1,0 +1,7 @@
+[
+{
+  "directory": "/home/smuser/otus#3/otus-3/build",
+  "command": "/usr/bin/clang++   -g -std=gnu++20 -o CMakeFiles/alloc.dir/main.cpp.o -c \"/home/smuser/otus#3/otus-3/main.cpp\"",
+  "file": "/home/smuser/otus#3/otus-3/main.cpp"
+}
+]
