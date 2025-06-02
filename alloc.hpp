@@ -2,7 +2,10 @@
 #include <iostream>
 #include <map>
 #include <vector>
-
+#include <memory> // Для std::allocator
+#include <iterator> // Для std::iterator
+#include <cstddef>
+#include <limits>
 class StandartExample
 {
 public:
@@ -276,6 +279,7 @@ class MyContainerZ
         void push_back2(int value);
         void printall();
         Node* get_next();
+        void clear();
     private:
         size_t m_size;
         size_t current;
@@ -359,3 +363,140 @@ inline Node *MyContainerZ::get_next()
     if (current >= m_size) return nullptr;  // Проверка на переполнение
     return &data[current+1];
 }
+
+inline void MyContainerZ::clear(){
+    freememory();
+}
+
+///Attempt+
+namespace newcont {
+
+template<typename T>
+class MyAllocator {
+public:
+    using value_type = T;
+
+    MyAllocator() noexcept {}
+    template<typename U>
+    MyAllocator(const MyAllocator<U>&) noexcept {}
+
+    T* allocate(std::size_t n) {
+        return static_cast<T*>(malloc(n * sizeof(T)));
+    }
+
+    void deallocate(T* p, std::size_t n) noexcept {
+        free(p);
+    }
+};
+
+
+template<typename T, typename Allocator = MyAllocator<T>>
+class MyContainer {
+public:
+    class MyIterator {
+    public:
+        explicit MyIterator(T* ptr) : m_ptr(ptr) {}
+
+        T& operator*() const { return *m_ptr; }
+        T* operator->() const { return m_ptr; }
+
+        MyIterator& operator++() {
+            ++m_ptr;
+            return *this;
+        }
+
+        MyIterator operator++(int) {
+            MyIterator tmp = *this;
+            ++m_ptr;
+            return tmp;
+        }
+
+        bool operator==(const MyIterator& other) const {
+            return m_ptr == other.m_ptr;
+        }
+
+        bool operator!=(const MyIterator& other) const {
+            return m_ptr != other.m_ptr;
+        }
+
+    private:
+        T* m_ptr;
+    };
+
+
+    MyContainer(const Allocator& alloc = Allocator());        
+    ~MyContainer();
+
+    void push_back(const T& value);
+    void printall();
+
+    MyIterator begin() { return MyIterator(m_data); }
+    MyIterator end() { return MyIterator(m_data + m_size); }
+
+private:
+    Allocator m_allocator;
+    T* m_data;
+    std::size_t m_size;
+    std::size_t m_capacity;
+
+    void reserve(std::size_t new_cap) {
+        if (new_cap <= m_capacity)
+            return;
+
+        T* new_data = m_allocator.allocate(new_cap);
+        for (std::size_t i = 0; i < m_size; ++i) {
+            new (new_data + i) T(std::move(m_data[i]));
+            m_data[i].~T();
+        }
+        if (m_data)
+            m_allocator.deallocate(m_data, m_capacity);
+        
+        m_data = new_data;
+        m_capacity = new_cap;
+    }
+
+    void clear() {
+        for (std::size_t i = 0; i < m_size; ++i)
+            m_data[i].~T();
+        m_size = 0;
+    }
+};
+
+
+template <typename T, typename Allocator>
+inline MyContainer<T, Allocator>::MyContainer(const Allocator &alloc): m_allocator(alloc), m_data(nullptr), m_size(0), m_capacity(0)
+{
+    T* new_data = m_allocator.allocate(10);
+}
+template <typename T, typename Allocator>
+inline MyContainer<T, Allocator>::~MyContainer()
+{
+        clear();
+        if (m_data)
+            m_allocator.deallocate(m_data, m_capacity);
+}
+
+template <typename T, typename Allocator>
+inline void MyContainer<T, Allocator>::push_back(const T &value)
+{
+    if (m_size == m_capacity)
+        reserve(m_capacity == 0 ? 1 : m_capacity * 2);
+    new (m_data + m_size) T(value);
+    ++m_size;
+}
+
+template <typename T, typename Allocator>
+inline void MyContainer<T, Allocator>::printall()
+{
+    size_t n = 1;
+    for (auto i = begin(); i != end(); i++)
+    {
+        std::cout << *i;
+        if (n != m_size)
+            std::cout << ",";
+        n++;
+    }
+    std::cout << std::endl;
+}
+
+} // namespace newcont

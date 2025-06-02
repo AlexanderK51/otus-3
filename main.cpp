@@ -15,17 +15,28 @@ int main()
     MyContainer test3;
     for (auto i = 0; i < 10; i++)
     {
-        test3.push_back(i);
+    test3.push_back(i);
     }
     test3.printall();
 
     std::cout << "My container alloc:" << std::endl;
-    MyContainerZ test4{10};
+    
+    //MyContainerZ test4{10};
+    // for (auto i = 0; i < 10; i++)
+    // {
+    //     test4.push_back2(i);
+    // }
+    // test4.printall();
+    // test4.clear();
+
+    // std::cout << "My container alloc+My alloc:" << std::endl;
+
+
+    newcont::MyContainer<int> test5;
+
     for (auto i = 0; i < 10; i++)
     {
-        test4.push_back2(i);
+        test5.push_back(i);
     }
-    test4.printall();
-
-    return 0;
+    test5.printall();
 }
